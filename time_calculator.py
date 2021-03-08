@@ -46,32 +46,94 @@ def add_time(start, duration, weekday=None):
 
     # calc number of days in duration... can't import math
     days = durhour / 24
-    days = stringloop(str(days))[0]  # can't floor so reuse stringloop, first element will be the floored number
+    # can't floor so reuse stringloop, first element will be the floored number
+    days = stringloop(str(days))[0]
 
     # subtract the number of days from the duration hour
-    durhour-=24*days
+    durhour -= 24 * days
 
-    print(hour, minute)
-    print(durhour, durmin, days)
-    new_time = "test"
+    # add minutes
+    minute += durmin
+
+    # if minutes over 60 then add to hour
+    if minute >= 60:
+        hour += 1
+        minute -= 60
+
+    # add hours together
+    hour += durhour
+
+    # if hours are over 24 then add to days
+    if hour >= 24:
+        days += 1
+        hour -= 24
+
+    # now convert back to ampm
+    if hour >= 12:
+        ampm = "PM"
+        hour -= 12
+    else:
+        ampm = "AM"
+
+    # now if hours are 0 we want to show 12am, convert to string here too
+    if hour == 0:
+        hour = "12"
+    else:
+        hour = str(hour)
+
+    # if minutes are less than 10 we need to add a leading zero
+    if minute < 10:
+        minute = "0"+str(minute)
+    else:
+        minute = str(minute)
+
+    # format time as a string
+    new_time = hour + ":" + minute + " " + ampm
+
+    # if weekday is not None then we need to figure out which weekday
+    if weekday is not None:
+        # weekday dict
+        weekdict = {
+            "monday": 0,
+            "tuesday": 1,
+            "wednesday": 2,
+            "thursday": 3,
+            "friday": 4,
+            "saturday": 5,
+            "sunday": 6
+        }
+        # swap dict around so we can lookup the number
+        weekdictlookup = {}
+        weeklist = sorted([(v, k) for k, v in weekdict.items()])
+        for entry in weeklist:
+            weekdictlookup[entry[0]] = entry[1]
+
+        # look up weekday in list
+        weeknum = weekdict[weekday.lower()]
+
+        # add number of days calculated earlier
+        weeknum += days
+
+        # divide by 7 so we can look back up in list
+        if weeknum >= 7:
+            tempnum = weeknum/7
+
+            # reuse strinloop to floor the week number
+            tempnum = stringloop(str(tempnum))[0]
+            weeknum -= tempnum*7
+
+        weekday = weekdictlookup[weeknum]
+
+        # now we have the new weekday we need to re-capitalise
+        weekday = weekday[0].upper() + weekday[1:]
+
+        # and then append to the new_time string
+        new_time += ", " + weekday
+
+    # now add the number of days past
+    if days == 1:
+        new_time += " (next day)"
+    elif days > 1:
+        new_time += " ("+str(days)+" days later)"
 
     return new_time
-
-
-print(add_time("3:00 PM", "3:10"))
-# Returns: 6:10 PM
-
-print(add_time("11:30 AM", "2:32", "Monday"))
-# Returns: 2:02 PM, Monday
-
-print(add_time("11:43 AM", "00:20"))
-# Returns: 12:03 PM
-
-print(add_time("10:10 PM", "3:30"))
-# Returns: 1:40 AM (next day)
-
-print(add_time("11:43 PM", "24:20", "tueSday"))
-# Returns: 12:03 AM, Thursday (2 days later)
-
-print(add_time("6:30 PM", "205:12"))
-# Returns: 7:42 AM (9 days later)
